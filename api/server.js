@@ -1,18 +1,16 @@
 const express = require('express');
 const admin = require('firebase-admin');
 const app = express();
-const port = 3000;
 
-// Inisialisasi Firebase Admin SDK
-const serviceAccount = require('../firebase-config.json');
-console.log('Database URL from config:', serviceAccount.databaseURL); // Debug
+// Ambil Firebase config dari environment variable
+const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: serviceAccount.databaseURL // Pastikan dibaca dari config
+  databaseURL: serviceAccount.databaseURL
 });
 
 const db = admin.database();
-console.log('Database initialized:', db); // Debug
+console.log('Database initialized:', db);
 
 // Middleware untuk parsing JSON
 app.use(express.json());
@@ -21,7 +19,6 @@ app.use(express.json());
 const hashPassword = (password) => {
   return require('crypto').createHash('sha256').update(password).digest('hex');
 };
-
 // API: Tambah User
 app.post('/api/users', async (req, res) => {
   try {
