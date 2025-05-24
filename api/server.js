@@ -1,5 +1,6 @@
 const express = require('express');
 const admin = require('firebase-admin');
+const bcrypt = require('bcrypt');
 const app = express();
 
 // Ambil Firebase config dari environment variable
@@ -14,11 +15,6 @@ console.log('Database initialized:', db);
 
 // Middleware untuk parsing JSON
 app.use(express.json());
-
-// Helper untuk hash password (sederhana, idealnya pakai bcrypt)
-const hashPassword = (password) => {
-  return require('crypto').createHash('sha256').update(password).digest('hex');
-};
 
 // Helper untuk menghasilkan ID user auto-increment
 const getNextUserId = async () => {
@@ -48,14 +44,15 @@ app.post('/api/register', async (req, res) => {
 
     // Generate ID user auto-increment
     const userId = await getNextUserId();
-    const username = `user_${userId}`; // Username berbasis ID, misal: user_1, user_2
+    const username = `user_${userId}`;
 
     const userRef = db.ref(`users/${username}`);
+    const hashedPassword = await bcrypt.hash(password, 10);
     const userData = {
       user_id: userId,
       name,
       email,
-      password: hashPassword(password),
+      password: hashedPassword,
       created_at: new Date().toISOString(),
       last_login: null
     };
@@ -81,7 +78,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Ambil data pengguna pertama yang cocok (seharusnya hanya satu)
+    // Ambil data pengguna pertama yang cocok
     let userData, username;
     usersSnapshot.forEach((childSnapshot) => {
       username = childSnapshot.key;
@@ -89,7 +86,8 @@ app.post('/api/login', async (req, res) => {
     });
 
     // Verifikasi password
-    if (userData.password !== hashPassword(password)) {
+    const isPasswordValid = await bcrypt.compare(password, userData.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
@@ -109,7 +107,39 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// API: Ambil Data User (diperbarui untuk konsistensi)
+// API: Change Password
+app.put('/api/users/:username/password', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { old_password, new_password } = req.body;
+    if (!old_password || !new_password) {
+      return res.status(400).json({ error: 'Missing required fields: old_password, new_password' });
+    }
+
+    const userRef = db.ref(`users/${username}`);
+    const userSnapshot = await userRef.once('value');
+    if (!userSnapshot.exists()) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = userSnapshot.val();
+    // Verifikasi kata sandi lama
+    const isPasswordValid = await bcrypt.compare(old_password, userData.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid old password' });
+    }
+
+    // Hash kata sandi baru
+    const hashedNewPassword = await bcrypt.hash(new_password, 10);
+    await userRef.update({ password: hashedNewPassword });
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update password', details: error.message });
+  }
+});
+
+// API: Ambil Data User
 app.get('/api/users/:username', async (req, res) => {
   try {
     const username = req.params.username;
@@ -130,7 +160,6 @@ app.get('/api/users/:username', async (req, res) => {
   }
 });
 
-// ... (sisa kode tetap sama: endpoint untuk lessons, quiz_scores, dll.)
 // API: Update Progress Kelas User
 app.put('/api/users/:username/lessons/:lessonId', async (req, res) => {
   try {
