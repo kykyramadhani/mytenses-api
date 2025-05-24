@@ -19,37 +19,97 @@ app.use(express.json());
 const hashPassword = (password) => {
   return require('crypto').createHash('sha256').update(password).digest('hex');
 };
-// API: Tambah User
-app.post('/api/users', async (req, res) => {
+
+// Helper untuk menghasilkan ID user auto-increment
+const getNextUserId = async () => {
+  const counterRef = db.ref('counters/user_id');
+  let newId;
+  await db.ref().transaction(async (db) => {
+    const counterSnapshot = await counterRef.once('value');
+    newId = (counterSnapshot.val() || 0) + 1;
+    await counterRef.set(newId);
+  });
+  return newId;
+};
+
+// API: Register User
+app.post('/api/register', async (req, res) => {
   try {
-    const { username, name, email, password } = req.body;
-    if (!username || !name || !email || !password) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Missing required fields: name, email, password' });
     }
+
+    // Cek apakah email sudah terdaftar
+    const usersSnapshot = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+    if (usersSnapshot.exists()) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+
+    // Generate ID user auto-increment
+    const userId = await getNextUserId();
+    const username = `user_${userId}`; // Username berbasis ID, misal: user_1, user_2
 
     const userRef = db.ref(`users/${username}`);
-    const snapshot = await userRef.once('value');
-    if (snapshot.exists()) {
-      return res.status(400).json({ error: 'Username already exists' });
-    }
-
     const userData = {
-      username,
+      user_id: userId,
       name,
       email,
       password: hashPassword(password),
       created_at: new Date().toISOString(),
-      last_login: new Date().toISOString()
+      last_login: null
     };
 
     await userRef.set(userData);
-    res.status(201).json({ message: 'User created successfully', user: userData });
+    res.status(201).json({ message: 'User registered successfully', user: { user_id: userId, name, email } });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create user', details: error.message });
+    res.status(500).json({ error: 'Failed to register user', details: error.message });
   }
 });
 
-// API: Ambil Data User
+// API: Login User
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Missing required fields: email, password' });
+    }
+
+    // Cari pengguna berdasarkan email
+    const usersSnapshot = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+    if (!usersSnapshot.exists()) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Ambil data pengguna pertama yang cocok (seharusnya hanya satu)
+    let userData, username;
+    usersSnapshot.forEach((childSnapshot) => {
+      username = childSnapshot.key;
+      userData = childSnapshot.val();
+    });
+
+    // Verifikasi password
+    if (userData.password !== hashPassword(password)) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    // Update last_login
+    await db.ref(`users/${username}/last_login`).set(new Date().toISOString());
+
+    res.status(200).json({
+      message: 'Login successful',
+      user: {
+        user_id: userData.user_id,
+        name: userData.name,
+        email: userData.email
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to login', details: error.message });
+  }
+});
+
+// API: Ambil Data User (diperbarui untuk konsistensi)
 app.get('/api/users/:username', async (req, res) => {
   try {
     const username = req.params.username;
@@ -70,6 +130,7 @@ app.get('/api/users/:username', async (req, res) => {
   }
 });
 
+// ... (sisa kode tetap sama: endpoint untuk lessons, quiz_scores, dll.)
 // API: Update Progress Kelas User
 app.put('/api/users/:username/lessons/:lessonId', async (req, res) => {
   try {
@@ -270,4 +331,3 @@ app.delete('/api/users/:username', async (req, res) => {
 });
 
 module.exports = app;
-

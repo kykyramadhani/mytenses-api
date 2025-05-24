@@ -1,0 +1,188 @@
+{
+  "info": {
+    "name": "MyTenses API (Vercel)",
+    "description": "Postman Collection for testing MyTenses API on Vercel",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Add User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"username\":\"kyky123\",\"name\":\"Kyky\",\"email\":\"kyky@example.com\",\"password\":\"password123\"}"
+        },
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/users",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users"]
+        },
+        "description": "Create a new user in the database."
+      }
+    },
+    {
+      "name": "Get User",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/users/kyky123",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "kyky123"]
+        },
+        "description": "Retrieve user data including lessons and quiz scores."
+      }
+    },
+    {
+      "name": "Update Lesson Progress",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"progress\":75,\"status\":\"in_progress\"}"
+        },
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/users/kyky123/lessons/simple_present",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "kyky123", "lessons", "simple_present"]
+        },
+        "description": "Update the progress and status of a lesson for a user."
+      }
+    },
+    {
+      "name": "Add Quiz Score",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"user_id\":\"kyky123\",\"quiz_id\":\"quiz_simple_present_1\",\"score\":85,\"date_taken\":\"2025-05-24T14:30:00Z\"}"
+        },
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/quiz_scores",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "quiz_scores"]
+        },
+        "description": "Add a quiz score for a user."
+      }
+    },
+    {
+      "name": "Get All Lessons",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/lessons",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "lessons"]
+        },
+        "description": "Retrieve all lessons including materials, quizzes, and questions."
+      }
+    },
+    {
+      "name": "Add Lesson",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"lesson_id\":\"simple_future\",\"title\":\"Simple Future\",\"description\":\"Belajar tentang penggunaan Simple Future.\"}"
+        },
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/lessons",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "lessons"]
+        },
+        "description": "Create a new lesson."
+      }
+    },
+    {
+      "name": "Add Material to Lesson",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"lesson_id\":\"simple_future\",\"chapter_title\":\"Pengenalan Simple Future\",\"explanation\":\"Simple Future untuk masa depan.\",\"formulas\":[{\"type\":\"positive\",\"formula\":\"Subject + will + Verb\"}]}"
+        },
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/materials",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "materials"]
+        },
+        "description": "Add a new material to a lesson."
+      }
+    },
+    {
+      "name": "Add Quiz to Lesson",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"lesson_id\":\"simple_future\",\"quiz_id\":\"quiz_simple_future_1\",\"title\":\"Kuis Simple Future Dasar\",\"total_points\":10}"
+        },
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/quizzes",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "quizzes"]
+        },
+        "description": "Add a new quiz to a lesson."
+      }
+    },
+    {
+      "name": "Add Question to Quiz",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"quiz_id\":\"quiz_simple_future_1\",\"text\":\"She ___ to school tomorrow.\",\"options\":[\"will go\",\"goes\",\"going\",\"went\"],\"correct_option\":\"will go\",\"points\":10}"
+        },
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/questions",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "questions"]
+        },
+        "description": "Add a new question to a quiz."
+      }
+    },
+    {
+      "name": "Delete User",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "https://mytenses-api.vercel.app/api/users/kyky123",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "kyky123"]
+        },
+        "description": "Delete a user and associated data."
+      }
+    }
+  ]
+}
