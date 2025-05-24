@@ -19,13 +19,17 @@ app.use(express.json());
 // Helper untuk menghasilkan ID user auto-increment
 const getNextUserId = async () => {
   const counterRef = db.ref('counters/user_id');
-  let newId;
-  await db.ref().transaction(async (db) => {
-    const counterSnapshot = await counterRef.once('value');
-    newId = (counterSnapshot.val() || 0) + 1;
-    await counterRef.set(newId);
-  });
-  return newId;
+  try {
+    let newId;
+    await counterRef.transaction((currentId) => {
+      newId = (currentId || 0) + 1;
+      return newId;
+    });
+    return newId;
+  } catch (error) {
+    console.error('Error in getNextUserId:', error);
+    throw new Error('Failed to generate user ID');
+  }
 };
 
 // API: Register User
@@ -60,6 +64,7 @@ app.post('/api/register', async (req, res) => {
     await userRef.set(userData);
     res.status(201).json({ message: 'User registered successfully', user: { user_id: userId, name, email } });
   } catch (error) {
+    console.error('Register error:', error);
     res.status(500).json({ error: 'Failed to register user', details: error.message });
   }
 });
@@ -99,10 +104,12 @@ app.post('/api/login', async (req, res) => {
       user: {
         user_id: userData.user_id,
         name: userData.name,
-        email: userData.email
+        email: userData.email,
+        username
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Failed to login', details: error.message });
   }
 });
@@ -135,6 +142,7 @@ app.put('/api/users/:username/password', async (req, res) => {
 
     res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
+    console.error('Change password error:', error);
     res.status(500).json({ error: 'Failed to update password', details: error.message });
   }
 });
@@ -156,6 +164,7 @@ app.get('/api/users/:username', async (req, res) => {
 
     res.status(200).json(userData);
   } catch (error) {
+    console.error('Get user error:', error);
     res.status(500).json({ error: 'Failed to fetch user', details: error.message });
   }
 });
@@ -177,6 +186,7 @@ app.put('/api/users/:username/lessons/:lessonId', async (req, res) => {
     await lessonRef.set({ progress, status });
     res.status(200).json({ message: 'Lesson progress updated successfully' });
   } catch (error) {
+    console.error('Update lesson progress error:', error);
     res.status(500).json({ error: 'Failed to update progress', details: error.message });
   }
 });
@@ -202,6 +212,7 @@ app.post('/api/quiz_scores', async (req, res) => {
     await scoreRef.set(scoreData);
     res.status(201).json({ message: 'Quiz score added successfully', score: scoreData });
   } catch (error) {
+    console.error('Add quiz score error:', error);
     res.status(500).json({ error: 'Failed to add quiz score', details: error.message });
   }
 });
@@ -248,6 +259,7 @@ app.get('/api/lessons', async (req, res) => {
 
     res.status(200).json(lessons);
   } catch (error) {
+    console.error('Get lessons error:', error);
     res.status(500).json({ error: 'Failed to fetch lessons', details: error.message });
   }
 });
@@ -270,6 +282,7 @@ app.post('/api/lessons', async (req, res) => {
     await lessonRef.set(lessonData);
     res.status(201).json({ message: 'Lesson created successfully', lesson: lessonData });
   } catch (error) {
+    console.error('Add lesson error:', error);
     res.status(500).json({ error: 'Failed to create lesson', details: error.message });
   }
 });
@@ -294,6 +307,7 @@ app.post('/api/materials', async (req, res) => {
     await materialRef.set(materialData);
     res.status(201).json({ message: 'Material added successfully', material: materialData });
   } catch (error) {
+    console.error('Add material error:', error);
     res.status(500).json({ error: 'Failed to add material', details: error.message });
   }
 });
@@ -311,6 +325,7 @@ app.post('/api/quizzes', async (req, res) => {
     await quizRef.set(quizData);
     res.status(201).json({ message: 'Quiz added successfully', quiz: quizData });
   } catch (error) {
+    console.error('Add quiz error:', error);
     res.status(500).json({ error: 'Failed to add quiz', details: error.message });
   }
 });
@@ -336,6 +351,7 @@ app.post('/api/questions', async (req, res) => {
     await questionRef.set(questionData);
     res.status(201).json({ message: 'Question added successfully', question: questionData });
   } catch (error) {
+    console.error('Add question error:', error);
     res.status(500).json({ error: 'Failed to add question', details: error.message });
   }
 });
@@ -355,6 +371,7 @@ app.delete('/api/users/:username', async (req, res) => {
     await db.ref('quiz_scores').orderByChild('user_id').equalTo(username).remove();
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
+    console.error('Delete user error:', error);
     res.status(500).json({ error: 'Failed to delete user', details: error.message });
   }
 });
