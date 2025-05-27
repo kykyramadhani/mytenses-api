@@ -150,11 +150,11 @@ app.put('/api/users/:username/password', async (req, res) => {
 // API: Change Password by Email
 app.put('/api/change-password-by-email', async (req, res) => {
   try {
-    const { email, old_password, new_password } = req.body;
+    const { email, new_password } = req.body;
 
     // Validate input
-    if (!email || !old_password || !new_password) {
-      return res.status(400).json({ error: 'Missing required fields: email, old_password, new_password' });
+    if (!email || !new_password) {
+      return res.status(400).json({ error: 'Missing required fields: email, new_password' });
     }
 
     // Find user by email
@@ -164,17 +164,10 @@ app.put('/api/change-password-by-email', async (req, res) => {
     }
 
     // Get the first matching user (email is unique, so there should be only one)
-    let username, userData;
+    let username;
     usersSnapshot.forEach((childSnapshot) => {
       username = childSnapshot.key;
-      userData = childSnapshot.val();
     });
-
-    // Verify old password
-    const isPasswordValid = await bcrypt.compare(old_password, userData.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid old password' });
-    }
 
     // Hash new password
     const hashedNewPassword = await bcrypt.hash(new_password, 10);
