@@ -114,7 +114,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// API: Change Password
+// API: Change Password by Username
 app.put('/api/users/:username/password', async (req, res) => {
   try {
     const { username } = req.params;
@@ -143,6 +143,48 @@ app.put('/api/users/:username/password', async (req, res) => {
     res.status(200).json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to update password', details: error.message });
+  }
+});
+
+// API: Change Password by Email
+app.put('/api/change-password-by-email', async (req, res) => {
+  try {
+    const { email, old_password, new_password } = req.body;
+
+    // Validate input
+    if (!email || !old_password || !new_password) {
+      return res.status(400).json({ error: 'Missing required fields: email, old_password, new_password' });
+    }
+
+    // Find user by email
+    const usersSnapshot = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+    if (!usersSnapshot.exists()) {
+      return res.status(404).json({ error: 'Email not found' });
+    }
+
+    // Get the first matching user (email is unique, so there should be only one)
+    let username, userData;
+    usersSnapshot.forEach((childSnapshot) => {
+      username = childSnapshot.key;
+      userData = childSnapshot.val();
+    });
+
+    // Verify old password
+    const isPasswordValid = await bcrypt.compare(old_password, userData.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid old password' });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(new_password, 10);
+
+    // Update password in the database
+    await db.ref(`users/${username}`).update({ password: hashedNewPassword });
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Change password by email error:', error);
     res.status(500).json({ error: 'Failed to update password', details: error.message });
   }
 });

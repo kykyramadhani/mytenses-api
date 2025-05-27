@@ -1,12 +1,12 @@
 {
   "info": {
-    "name": "MyTenses API (Localhost)",
-    "description": "Postman Collection for testing MyTenses API on localhost",
+    "name": "MyTenses API (Vercel)",
+    "description": "Postman Collection for testing MyTenses API on Vercel",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Add User",
+      "name": "Register User",
       "request": {
         "method": "POST",
         "header": [
@@ -17,15 +17,63 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"username\":\"kyky123\",\"name\":\"Kyky\",\"email\":\"kyky@example.com\",\"password\":\"password123\"}"
+          "raw": "{\"name\":\"Kyky\",\"email\":\"kyky@example.com\",\"password\":\"password123\"}"
         },
         "url": {
-          "raw": "http://localhost:3000/api/users",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "users"]
+          "raw": "{{baseUrl}}/api/register",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "register"]
         },
-        "description": "Create a new user in the database."
+        "description": "Register a new user with name, email, and password. User ID is auto-incremented, and username is generated as user_{userId}."
+      },
+      "response": []
+    },
+    {
+      "name": "Login User",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"kyky@example.com\",\"password\":\"password123\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/login",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "login"]
+        },
+        "description": "Authenticate a user with email and password."
+      },
+      "response": []
+    },
+    {
+      "name": "Change Password",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"old_password\":\"password123\",\"new_password\":\"newpassword456\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users/user_1/password",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "user_1", "password"]
+        },
+        "description": "Change the password for a user by providing the old and new passwords."
       },
       "response": []
     },
@@ -33,12 +81,11 @@
       "name": "Get User",
       "request": {
         "method": "GET",
-        "header": [],
         "url": {
-          "raw": "http://localhost:3000/api/users/kyky123",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "users", "kyky123"]
+          "raw": "{{baseUrl}}/api/users/user_1",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "user_1"]
         },
         "description": "Retrieve user data including lessons and quiz scores."
       },
@@ -59,10 +106,10 @@
           "raw": "{\"progress\":75,\"status\":\"in_progress\"}"
         },
         "url": {
-          "raw": "http://localhost:3000/api/users/kyky123/lessons/simple_present",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "users", "kyky123", "lessons", "simple_present"]
+          "raw": "{{baseUrl}}/api/users/user_1/lessons/simple_present",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "user_1", "lessons", "simple_present"]
         },
         "description": "Update the progress and status of a lesson for a user."
       },
@@ -80,12 +127,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"user_id\":\"kyky123\",\"quiz_id\":\"quiz_simple_present_1\",\"score\":85,\"date_taken\":\"2025-05-24T14:30:00Z\"}"
+          "raw": "{\"user_id\":\"user_1\",\"quiz_id\":\"quiz_simple_present_1\",\"score\":85,\"date_taken\":\"2025-05-24T14:30:00Z\"}"
         },
         "url": {
-          "raw": "http://localhost:3000/api/quiz_scores",
-          "host": ["localhost"],
-          "port": "3000",
+          "raw": "{{baseUrl}}/api/quiz_scores",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "quiz_scores"]
         },
         "description": "Add a quiz score for a user."
@@ -96,11 +143,10 @@
       "name": "Get All Lessons",
       "request": {
         "method": "GET",
-        "header": [],
         "url": {
-          "raw": "http://localhost:3000/api/lessons",
-          "host": ["localhost"],
-          "port": "3000",
+          "raw": "{{baseUrl}}/api/lessons",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "lessons"]
         },
         "description": "Retrieve all lessons including materials, quizzes, and questions."
@@ -122,9 +168,9 @@
           "raw": "{\"lesson_id\":\"simple_future\",\"title\":\"Simple Future\",\"description\":\"Belajar tentang penggunaan Simple Future.\"}"
         },
         "url": {
-          "raw": "http://localhost:3000/api/lessons",
-          "host": ["localhost"],
-          "port": "3000",
+          "raw": "{{baseUrl}}/api/lessons",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "lessons"]
         },
         "description": "Create a new lesson."
@@ -146,9 +192,9 @@
           "raw": "{\"lesson_id\":\"simple_future\",\"chapter_title\":\"Pengenalan Simple Future\",\"explanation\":\"Simple Future untuk masa depan.\",\"formulas\":[{\"type\":\"positive\",\"formula\":\"Subject + will + Verb\"}]}"
         },
         "url": {
-          "raw": "http://localhost:3000/api/materials",
-          "host": ["localhost"],
-          "port": "3000",
+          "raw": "{{baseUrl}}/api/materials",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "materials"]
         },
         "description": "Add a new material to a lesson."
@@ -170,9 +216,9 @@
           "raw": "{\"lesson_id\":\"simple_future\",\"quiz_id\":\"quiz_simple_future_1\",\"title\":\"Kuis Simple Future Dasar\",\"total_points\":10}"
         },
         "url": {
-          "raw": "http://localhost:3000/api/quizzes",
-          "host": ["localhost"],
-          "port": "3000",
+          "raw": "{{baseUrl}}/api/quizzes",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "quizzes"]
         },
         "description": "Add a new quiz to a lesson."
@@ -194,9 +240,9 @@
           "raw": "{\"quiz_id\":\"quiz_simple_future_1\",\"text\":\"She ___ to school tomorrow.\",\"options\":[\"will go\",\"goes\",\"going\",\"went\"],\"correct_option\":\"will go\",\"points\":10}"
         },
         "url": {
-          "raw": "http://localhost:3000/api/questions",
-          "host": ["localhost"],
-          "port": "3000",
+          "raw": "{{baseUrl}}/api/questions",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "questions"]
         },
         "description": "Add a new question to a quiz."
@@ -207,16 +253,22 @@
       "name": "Delete User",
       "request": {
         "method": "DELETE",
-        "header": [],
         "url": {
-          "raw": "http://localhost:3000/api/users/kyky123",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "users", "kyky123"]
+          "raw": "{{baseUrl}}/api/users/user_1",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "user_1"]
         },
         "description": "Delete a user and associated data."
       },
       "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://mytenses-api.vercel.app",
+      "description": "Base URL for the MyTenses API"
     }
   ]
 }
