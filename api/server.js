@@ -13,7 +13,7 @@ admin.initializeApp({
 const db = admin.database();
 console.log('Database initialized:', db);
 
-// Middleware untuk parsing JSON
+// Middleware untuk parking JSON
 app.use(express.json());
 
 // Helper untuk menghasilkan ID user auto-increment
@@ -58,11 +58,12 @@ app.post('/api/register', async (req, res) => {
       email,
       password: hashedPassword,
       created_at: new Date().toISOString(),
-      last_login: null
+      last_login: null,
+      bio: '' // Initialize empty bio
     };
 
     await userRef.set(userData);
-    res.status(201).json({ message: 'User registered successfully', user: { user_id: userId, name, email } });
+    res.status(201).json({ message: 'User registered successfully', user: { user_id: userId, name, email, username } });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ error: 'Failed to register user', details: error.message });
@@ -105,7 +106,8 @@ app.post('/api/login', async (req, res) => {
         user_id: userData.user_id,
         name: userData.name,
         email: userData.email,
-        username
+        username,
+        bio: userData.bio || ''
       }
     });
   } catch (error) {
@@ -182,7 +184,35 @@ app.put('/api/change-password-by-email', async (req, res) => {
   }
 });
 
-// API: Ambil Data User
+// API: Update or Add User Bio
+app.put('/api/users/:username/bio', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { bio } = req.body;
+
+    if (bio === undefined || bio === null) {
+      return res.status(400).json({ error: 'Missing required field: bio' });
+    }
+
+    if (typeof bio !== 'string') {
+      return res.status(400).json({ error: 'Bio must be a string' });
+    }
+
+    const userRef = db.ref(`users/${username}`);
+    const userSnapshot = await userRef.once('value');
+    if (!userSnapshot.exists()) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    await userRef.update({ bio: bio.trim() });
+    res.status(200).json({ message: 'Bio updated successfully', bio: bio.trim() });
+  } catch (error) {
+    console.error('Update bio error:', error);
+    res.status(500).json({ error: 'Failed to update bio', details: error.message });
+  }
+});
+
+// API: Ambil Data User (Updated to include bio and completed lessons)
 app.get('/api/users/:username', async (req, res) => {
   try {
     const username = req.params.username;
@@ -190,14 +220,34 @@ app.get('/api/users/:username', async (req, res) => {
     if (!userSnapshot.exists()) {
       return res.status(404).json({ error: 'User not found' });
     }
+
     const lessonsSnapshot = await db.ref(`user_lessons/${username}`).once('value');
     const scoresSnapshot = await db.ref('quiz_scores').orderByChild('user_id').equalTo(username).once('value');
 
     const userData = userSnapshot.val();
-    userData.lessons = lessonsSnapshot.val() || {};
-    userData.quiz_scores = scoresSnapshot.val() || {};
+    const userLessons = lessonsSnapshot.val() || {};
 
-    res.status(200).json(userData);
+    // Get completed lessons
+    const completedLessons = Object.entries(userLessons)
+      .filter(([_, lesson]) => lesson.status === 'completed')
+      .map(([lessonId, _]) => ({
+        lesson_id: lessonId,
+        title: (db.ref(`lessons/${lessonId}`).once('value')).val()?.title || lessonId
+      }));
+
+    // Prepare profile response
+    const profile = {
+      user_id: userData.user_id,
+      name: userData.name,
+      email: userData.email,
+      username,
+      bio: userData.bio || '',
+      completed_lessons: completedLessons,
+      lessons: userLessons,
+      quiz_scores: scoresSnapshot.val() || {}
+    };
+
+    res.status(200).json(profile);
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Failed to fetch user', details: error.message });
@@ -397,7 +447,7 @@ app.delete('/api/users/:username', async (req, res) => {
     const username = req.params.username;
     const userRef = db.ref(`users/${username}`);
     const snapshot = await userRef.once('value');
-    if (!snapshot.exists()) {
+    if (!userSnapshot.exists()) {
       return res.status(404).json({ error: 'User not found' });
     }
 

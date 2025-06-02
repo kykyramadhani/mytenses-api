@@ -63,7 +63,31 @@
           "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "users", "user_1"]
         },
-        "description": "Retrieve user data including lessons and quiz scores."
+        "description": "Retrieve user data including lessons, quiz scores, bio, and completed lessons."
+      },
+      "response": []
+    },
+    {
+      "name": "Update User Bio",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"bio\":\"English enthusiast from Jakarta\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users/user_1/bio",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "user_1", "bio"]
+        },
+        "description": "Update or add a bio for a user."
       },
       "response": []
     },
@@ -197,7 +221,8 @@
           "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "quizzes"]
         },
-        "description": "Add a new quiz to a lesson."
+        "description": "Add a new quiz to a lesson"
+
       },
       "response": []
     },
