@@ -222,7 +222,6 @@
           "path": ["api", "quizzes"]
         },
         "description": "Add a new quiz to a lesson"
-
       },
       "response": []
     },
@@ -247,6 +246,20 @@
           "path": ["api", "questions"]
         },
         "description": "Add a new question to a quiz."
+      },
+      "response": []
+    },
+    {
+      "name": "Get All Materials",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/materials",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "materials"]
+        },
+        "description": "Retrieve all materials."
       },
       "response": []
     },
