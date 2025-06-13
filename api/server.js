@@ -461,4 +461,16 @@ app.delete('/api/users/:username', async (req, res) => {
   }
 });
 
+app.get('/api/materials', async (req, res) => {
+  try {
+    const materialsSnapshot = await db.ref('materials').once('value');
+    const materials = materialsSnapshot.val() || {};
+    const materialsArray = Object.values(materials);
+    res.status(200).json({ materials: materialsArray });
+  } catch (error) {
+    console.error('Get materials error:', error);
+    res.status(500).json({ error: 'Failed to fetch materials', details: error.message });
+  }
+});
+
 module.exports = app;
