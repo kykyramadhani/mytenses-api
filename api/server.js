@@ -184,34 +184,6 @@ app.put('/api/change-password-by-email', async (req, res) => {
   }
 });
 
-// API: Update or Add User Bio
-app.put('/api/users/:username/bio', async (req, res) => {
-  try {
-    const { username } = req.params;
-    const { bio } = req.body;
-
-    if (bio === undefined || bio === null) {
-      return res.status(400).json({ error: 'Missing required field: bio' });
-    }
-
-    if (typeof bio !== 'string') {
-      return res.status(400).json({ error: 'Bio must be a string' });
-    }
-
-    const userRef = db.ref(`users/${username}`);
-    const userSnapshot = await userRef.once('value');
-    if (!userSnapshot.exists()) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    await userRef.update({ bio: bio.trim() });
-    res.status(200).json({ message: 'Bio updated successfully', bio: bio.trim() });
-  } catch (error) {
-    console.error('Update bio error:', error);
-    res.status(500).json({ error: 'Failed to update bio', details: error.message });
-  }
-});
-
 // API: Ambil Data User
 app.get('/api/users/:username', async (req, res) => {
   try {
