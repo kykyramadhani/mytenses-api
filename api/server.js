@@ -502,11 +502,6 @@ app.put('/api/users/:username', async (req, res) => {
     const username = req.params.username;
     const { name, bio } = req.body;
 
-    // Validasi input
-    if (!name) {
-      return res.status(400).json({ error: 'Name is required' });
-    }
-
     // Periksa apakah pengguna ada
     const userSnapshot = await db.ref(`users/${username}`).once('value');
     if (!userSnapshot.exists()) {
@@ -514,13 +509,18 @@ app.put('/api/users/:username', async (req, res) => {
     }
 
     // Siapkan data untuk update
-    const updateData = { name };
+    const updateData = {};
+    if (name !== undefined) {
+      updateData.name = name || null;
+    }
     if (bio !== undefined) {
       updateData.bio = bio || null;
     }
 
-    // Update data pengguna
-    await db.ref(`users/${username}`).update(updateData);
+    // Update data pengguna jika ada perubahan
+    if (Object.keys(updateData).length > 0) {
+      await db.ref(`users/${username}`).update(updateData);
+    }
 
     res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
