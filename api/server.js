@@ -212,27 +212,34 @@ app.put('/api/users/:username/bio', async (req, res) => {
   }
 });
 
-// API: Ambil Data User (Updated to include bio and completed lessons)
+// API: Ambil Data User
 app.get('/api/users/:username', async (req, res) => {
   try {
     const username = req.params.username;
+
+    // Ambil data pengguna
     const userSnapshot = await db.ref(`users/${username}`).once('value');
     if (!userSnapshot.exists()) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Ambil data lessons pengguna
     const lessonsSnapshot = await db.ref(`user_lessons/${username}`).once('value');
     const scoresSnapshot = await db.ref('quiz_scores').orderByChild('user_id').equalTo(username).once('value');
 
+    // Ambil semua data lessons untuk mendapatkan title
+    const allLessonsSnapshot = await db.ref('lessons').once('value');
+
     const userData = userSnapshot.val();
     const userLessons = lessonsSnapshot.val() || {};
+    const allLessons = allLessonsSnapshot.val() || {};
 
     // Get completed lessons
     const completedLessons = Object.entries(userLessons)
       .filter(([_, lesson]) => lesson.status === 'completed')
       .map(([lessonId, _]) => ({
         lesson_id: lessonId,
-        title: (db.ref(`lessons/${lessonId}`).once('value')).val()?.title || lessonId
+        title: allLessons[lessonId]?.title || lessonId
       }));
 
     // Prepare profile response
