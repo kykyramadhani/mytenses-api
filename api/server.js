@@ -375,7 +375,7 @@ app.post('/api/lessons', async (req, res) => {
 // API: Tambah Materi ke Kelas
 app.post('/api/materials', async (req, res) => {
   try {
-    const { lesson_id, chapter_title, explanation, formulas } = req.body;
+    const { lesson_id, chapter_title, explanation, formulas, examples} = req.body;
     if (!lesson_id || !chapter_title || !explanation) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -386,7 +386,8 @@ app.post('/api/materials', async (req, res) => {
       lesson_id,
       chapter_title,
       explanation,
-      formulas: formulas || []
+      formulas: formulas || [],
+      examples: examples || []
     };
 
     await materialRef.set(materialData);
