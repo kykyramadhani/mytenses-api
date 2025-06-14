@@ -497,4 +497,33 @@ app.get('/api/materials', async (req, res) => {
   }
 });
 
+app.put('/api/users/:username', async (req, res) => {
+  try {
+    const username = req.params.username;
+    const { name, bio } = req.body;
+
+    // Validasi input
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    // Periksa apakah pengguna ada
+    const userSnapshot = await db.ref(`users/${username}`).once('value');
+    if (!userSnapshot.exists()) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Update data pengguna
+    await db.ref(`users/${username}`).update({
+      name,
+      bio: bio || null
+    });
+
+    res.status(200).json({ message: 'User updated successfully' });
+  } catch (error) {
+    console.error('Update user error:', error);
+    res.status(500).json({ error: 'Failed to update user', details: error.message });
+  }
+});
+
 module.exports = app;
