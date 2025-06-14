@@ -442,6 +442,22 @@ app.post('/api/questions', async (req, res) => {
   }
 });
 
+// API: Get All Questions
+app.get('/api/questions', async (req, res) => {
+  try {
+    const questionsSnapshot = await db.ref('questions').once('value');
+    const questions = questionsSnapshot.val() || {};
+
+    // Ubah objek menjadi array untuk respons yang lebih mudah diproses
+    const questionsArray = Object.values(questions);
+
+    res.status(200).json({ questions: questionsArray });
+  } catch (error) {
+    console.error('Get questions error:', error);
+    res.status(500).json({ error: 'Failed to fetch questions', details: error.message });
+  }
+});
+
 // API: Delete User
 app.delete('/api/users/:username', async (req, res) => {
   try {
