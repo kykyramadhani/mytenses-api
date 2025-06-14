@@ -189,7 +189,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"lesson_id\":\"simple_future\",\"chapter_title\":\"Pengenalan Simple Future\",\"explanation\":\"Simple Future untuk masa depan.\",\"formulas\":[{\"type\":\"positive\",\"formula\":\"Subject + will + Verb\"}]}"
+          "raw": "{\"lesson_id\":\"simple_present\",\"chapter_title\":\"Pengenalan Simple Present\",\"explanation\":[{\"Simple Present untuk menyampaikan .\",\"formulas\":[{\"type\":\"positive\",\"formula\":\"Subject + will + Verb\",\"examples\":[{\"sentence\":\"She walks to school every day.\",\"example_translation\":\"Dia berjalan ke sekolah setiap hari.\"},{\"sentence\":\"They do not play football.\",\"example_translation\":\"Mereka tidak bermain sepak bola.\"}]}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/materials",

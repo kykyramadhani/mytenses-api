@@ -13,7 +13,7 @@ admin.initializeApp({
 const db = admin.database();
 console.log('Database initialized:', db);
 
-// Middleware untuk parking JSON
+// Middleware untuk parsing JSON
 app.use(express.json());
 
 // Helper untuk menghasilkan ID user auto-increment
@@ -375,9 +375,9 @@ app.post('/api/lessons', async (req, res) => {
 // API: Tambah Materi ke Kelas
 app.post('/api/materials', async (req, res) => {
   try {
-    const { lesson_id, chapter_title, explanation, formulas, examples} = req.body;
+    const { lesson_id, chapter_title, explanation, formulas, examples } = req.body;
     if (!lesson_id || !chapter_title || !explanation) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: 'Missing required fields: lesson_id, chapter_title, explanation' });
     }
 
     const materialRef = db.ref('materials').push();

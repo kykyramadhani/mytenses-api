@@ -54,6 +54,30 @@
       "response": []
     },
     {
+      "name": "Change Password",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"old_password\":\"password123\",\"new_password\":\"newpassword456\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/users/user_1/password",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "user_1", "password"]
+        },
+        "description": "Change the password for a user by providing the old and new passwords."
+      },
+      "response": []
+    },
+    {
       "name": "Get User",
       "request": {
         "method": "GET",
@@ -189,7 +213,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"lesson_id\":\"simple_future\",\"chapter_title\":\"Pengenalan Simple Future\",\"explanation\":\"Simple Future untuk masa depan.\",\"formulas\":[{\"type\":\"positive\",\"formula\":\"Subject + will + Verb\"}]}"
+          "raw": "{\"lesson_id\":\"simple_present\",\"chapter_title\":\"Pengenalan Simple Present\",\"explanation\":\"Simple Present digunakan untuk menyatakan fakta atau kebenaran.\",\"formulas\":[{\"type\":\"positive\",\"formula\":\"Subject + Verb1 + s/es\"},{\"type\":\"negative\",\"formula\":\"Subject + do/does not + Verb1\"},{\"type\":\"question\",\"formula\":\"Do/Does + Subject + Verb1\"}],\"examples\":[{\"sentence\":\"She walks to school every day.\",\"example_translation\":\"Dia berjalan ke sekolah setiap hari.\"},{\"sentence\":\"They do not play football.\",\"example_translation\":\"Mereka tidak bermain sepak bola.\"}]}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/materials",
@@ -197,7 +221,7 @@
           "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "materials"]
         },
-        "description": "Add a new material to a lesson."
+        "description": "Add a new material to a lesson, including formulas and examples."
       },
       "response": []
     },
@@ -221,7 +245,7 @@
           "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "quizzes"]
         },
-        "description": "Add a new quiz to a lesson"
+        "description": "Add a new quiz to a lesson."
       },
       "response": []
     },
