@@ -513,11 +513,14 @@ app.put('/api/users/:username', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // Siapkan data untuk update
+    const updateData = { name };
+    if (bio !== undefined) {
+      updateData.bio = bio || null;
+    }
+
     // Update data pengguna
-    await db.ref(`users/${username}`).update({
-      name,
-      bio: bio || null
-    });
+    await db.ref(`users/${username}`).update(updateData);
 
     res.status(200).json({ message: 'User updated successfully' });
   } catch (error) {
