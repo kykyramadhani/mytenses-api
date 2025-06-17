@@ -309,7 +309,7 @@
             "url": {
               "raw": "https://mytenses-api.vercel.app/api/questions",
               "protocol": "https",
-              "host": ["your-vercel-app", "vercel", "app"],
+              "host": ["mytenses-api", "vercel", "app"],
               "path": ["api", "questions"]
             },
             "body": {
