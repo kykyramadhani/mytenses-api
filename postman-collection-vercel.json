@@ -307,7 +307,7 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/users/user_1/password",
+              "raw": "{{baseUrl}}/api/questions/question_1",
               "protocol": "https",
               "host": ["mytenses-api", "vercel", "app"],
               "path": ["api", "questions", "question_1"]
