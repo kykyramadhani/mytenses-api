@@ -213,7 +213,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"lesson_id\":\"simple_present\",\"chapter_title\":\"Pengenalan Simple Present\",\"explanation\":\"Simple Present digunakan untuk menyatakan fakta atau kebenaran.\",\"formulas\":[{\"type\":\"positive\",\"formula\":\"Subject + Verb1 + s/es\"},{\"type\":\"negative\",\"formula\":\"Subject + do/does not + Verb1\"},{\"type\":\"question\",\"formula\":\"Do/Does + Subject + Verb1\"}],\"examples\":[{\"sentence\":\"She walks to school every day.\",\"example_translation\":\"Dia berjalan ke sekolah setiap hari.\"},{\"sentence\":\"They do not play football.\",\"example_translation\":\"Mereka tidak bermain sepak bola.\"}]}"
+          "raw": "{\"lesson_id\":\"simple_present\",\"chapter_title\":\"Pengenalan Simple Present\",\"explanation\":[\"Simple Present digunakan untuk menyatakan fakta atau kebenaran.\", \"Present berarti masa kini, simple berarti sederhana.\", \"Contoh kata pendukung: always, often, never.\"],\"formulas\":[{\"type\":\"positive\",\"formula\":\"Subject + Verb1 + s/es\"},{\"type\":\"negative\",\"formula\":\"Subject + do/does not + Verb1\"},{\"type\":\"question\",\"formula\":\"Do/Does + Subject + Verb1\"}],\"examples\":[{\"sentence\":\"She walks to school every day.\",\"example_translation\":\"Dia berjalan ke sekolah setiap hari.\"},{\"sentence\":\"They do not play football.\",\"example_translation\":\"Mereka tidak bermain sepak bola.\"}]}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/materials",
