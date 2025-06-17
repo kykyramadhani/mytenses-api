@@ -307,7 +307,7 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "https://your-vercel-app.vercel.app/api/questions",
+              "raw": "https://mytenses-api.vercel.app/api/questions",
               "protocol": "https",
               "host": ["your-vercel-app", "vercel", "app"],
               "path": ["api", "questions"]
