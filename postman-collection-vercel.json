@@ -302,23 +302,28 @@
       "response": []
     },
     {
-          "name": "Update All Points",
-          "request": {
-            "method": "PATCH",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/questions/question_1",
-              "protocol": "https",
-              "host": ["mytenses-api", "vercel", "app"],
-              "path": ["api", "questions", "question_1"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\"points\":20}"
-            }
-          },
-          "response": []
+      "name": "Update All Points",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/questions",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "questions"]
         },
+        "body": {
+          "mode": "raw",
+          "raw": "{\"points\":20}"
+        }
+      },
+      "response": []
+    },
     {
       "name": "Delete User",
       "request": {
