@@ -288,6 +288,38 @@
       "response": []
     },
     {
+      "name": "Get All Questions",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/questions",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "questions"]
+        },
+        "description": "Retrieve all questions from the database."
+      },
+      "response": []
+    },
+    {
+          "name": "Update All Points",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "https://your-vercel-app.vercel.app/api/questions",
+              "protocol": "https",
+              "host": ["your-vercel-app", "vercel", "app"],
+              "path": ["api", "questions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"points\":20}"
+            }
+          },
+          "response": []
+        },
+    {
       "name": "Delete User",
       "request": {
         "method": "DELETE",

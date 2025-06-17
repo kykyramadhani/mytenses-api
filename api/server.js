@@ -465,6 +465,24 @@ app.get('/api/questions', async (req, res) => {
   }
 });
 
+// API: PUT Points Questions
+app.patch('/api/questions/:questionId', (req, res) => {
+    const questionId = req.params.questionId;
+    const { points } = req.body;
+
+    if (!points || isNaN(points)) {
+        return res.status(400).json({ error: 'Points is required and must be a number' });
+    }
+
+    db.ref(`questions/${questionId}`).update({ points: Number(points) })
+        .then(() => {
+            res.json({ message: 'Points updated successfully' });
+        })
+        .catch((error) => {
+            res.status(500).json({ error: 'Failed to update points', details: error.message });
+        });
+});
+
 // API: Delete User
 app.delete('/api/users/:username', async (req, res) => {
   try {
