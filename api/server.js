@@ -437,7 +437,7 @@ app.get('/api/questions', async (req, res) => {
   }
 });
 
-// API: PUT Points Questions
+// API: PUT Points All Questions
 app.patch('/api/questions/:questionId', (req, res) => {
     const questionId = req.params.questionId;
     const { points } = req.body;
