@@ -307,10 +307,10 @@
             "method": "PATCH",
             "header": [],
             "url": {
-              "raw": "https://mytenses-api.vercel.app/api/questions",
+              "raw": "{{baseUrl}}/api/users/user_1/password",
               "protocol": "https",
               "host": ["mytenses-api", "vercel", "app"],
-              "path": ["api", "questions"]
+              "path": ["api", "questions", "question_1"]
             },
             "body": {
               "mode": "raw",
