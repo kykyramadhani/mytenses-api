@@ -551,4 +551,57 @@ app.put('/api/materials/:materialId', async (req, res) => {
   }
 });
 
+// API: Get Lesson Progress for a User
+app.get('/api/users/:username/lessons', async (req, res) => {
+  try {
+    const { username } = req.params;
+
+    // Check if user exists
+    const userSnapshot = await db.ref(`users/${username}`).once('value');
+    if (!userSnapshot.exists()) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Fetch lesson progress
+    const lessonsSnapshot = await db.ref(`user_lessons/${username}`).once('value');
+    const userLessons = lessonsSnapshot.val() || {};
+
+    // Fetch all lessons to get titles
+    const allLessonsSnapshot = await db.ref('lessons').once('value');
+    const allLessons = allLessonsSnapshot.val() || {};
+
+    // Enrich lesson progress with titles
+    const lessonProgress = Object.entries(userLessons).map(([lessonId, lessonData]) => ({
+      lesson_id: lessonId,
+      title: allLessons[lessonId]?.title || lessonId,
+      progress: lessonData.progress || 0,
+      status: lessonData.status || 'not_started'
+    }));
+
+    res.status(200).json({ lesson_progress: lessonProgress });
+  } catch (error) {
+    console.error('Get lesson progress error:', error);
+    res.status(500).json({ error: 'Failed to fetch lesson progress', details: error.message });
+  }
+});
+app.get('/api/users/:username/lessons/:lessonId', async (req, res) => {
+  try {
+    const { username, lessonId } = req.params;
+    const snapshot = await db.ref(`users/${username}/lessons/${lessonId}`).once('value');
+    const lesson = snapshot.val() || { progress: 0, status: 'in_progress', title: lessonId.replace('_', ' ').toUpperCase() };
+    res.status(200).json({
+      progress: lesson.progress || 0,
+      status: lesson.status || 'in_progress'
+    });
+  } catch (error) {
+    console.error('Get lesson progress error:', error);
+    res.status(500).json({ error: 'Failed to fetch lesson progress', details: error.message });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
 module.exports = app;

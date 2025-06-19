@@ -92,7 +92,7 @@
       "response": []
     },
     {
-      "name": "Update User Bio",
+      "name": "Update User Data",
       "request": {
         "method": "PUT",
         "header": [
@@ -103,15 +103,15 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"bio\":\"English enthusiast from Jakarta\"}"
+          "raw": "{\"name\":\"John Doe\",\"bio\":\"English enthusiast from Jakarta\"}"
         },
         "url": {
-          "raw": "{{baseUrl}}/api/users/user_1/bio",
+          "raw": "{{baseUrl}}/api/users/user_1",
           "protocol": "https",
           "host": ["mytenses-api", "vercel", "app"],
-          "path": ["api", "users", "user_1", "bio"]
+          "path": ["api", "users", "user_1"]
         },
-        "description": "Update or add a bio for a user."
+        "description": "Update user information such as name or bio."
       },
       "response": []
     },
@@ -136,6 +136,20 @@
           "path": ["api", "users", "user_1", "lessons", "simple_present"]
         },
         "description": "Update the progress and status of a lesson for a user."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Lesson Progress",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/users/user_1/lessons",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "users", "user_1", "lessons"]
+        },
+        "description": "Retrieve all lesson progress for a user, including lesson ID, title, progress, and status."
       },
       "response": []
     },
@@ -237,7 +251,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\"lesson_id\":\"simple_future\",\"quiz_id\":\"quiz_simple_future_1\",\"title\":\"Kuis Simple Future Dasar\",\"total_points\":10}"
+          "raw": "{\"lesson_id\":\"simple_future\",\"quiz_id\":\"quiz_simple_future_1\",\"title\":\"Kuis Simple Quiz\",\"total_points\":10}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/quizzes",
@@ -283,7 +297,7 @@
           "host": ["mytenses-api", "vercel", "app"],
           "path": ["api", "materials"]
         },
-        "description": "Retrieve all materials."
+        "description": "Collect all materials."
       },
       "response": []
     },
@@ -320,7 +334,8 @@
         "body": {
           "mode": "raw",
           "raw": "{\"points\":20}"
-        }
+        },
+        "description": "Update points for all questions."
       },
       "response": []
     },
@@ -335,6 +350,30 @@
           "path": ["api", "users", "user_1"]
         },
         "description": "Delete a user and associated data."
+      },
+      "response": []
+    },
+    {
+      "name": "Change Password by Email",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"kyky@example.com\",\"new_password\":\"newpassword456\"}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/change-password-by-email",
+          "protocol": "https",
+          "host": ["mytenses-api", "vercel", "app"],
+          "path": ["api", "change-password-by-email"]
+        },
+        "description": "Change the password for a user by providing their email and new password."
       },
       "response": []
     }
