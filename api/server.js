@@ -185,6 +185,7 @@ app.put('/api/change-password-by-email', async (req, res) => {
 });
 
 // API: Ambil Data User
+// API: Ambil Data User
 app.get('/api/users/:username', async (req, res) => {
   try {
     const username = req.params.username;
@@ -206,13 +207,13 @@ app.get('/api/users/:username', async (req, res) => {
     const userLessons = lessonsSnapshot.val() || {};
     const allLessons = allLessonsSnapshot.val() || {};
 
-    // Get completed lessons
-    const completedLessons = Object.entries(userLessons)
-      .filter(([_, lesson]) => lesson.status === 'completed')
-      .map(([lessonId, _]) => ({
-        lesson_id: lessonId,
-        title: allLessons[lessonId]?.title || lessonId
-      }));
+    // Map lessons progress with titles
+    const lessons = Object.entries(userLessons).map(([lessonId, lesson]) => ({
+      lesson_id: lessonId,
+      title: allLessons[lessonId]?.title || lessonId,
+      progress: lesson.progress || 0,
+      status: lesson.status || 'not_started'
+    }));
 
     // Prepare profile response
     const profile = {
@@ -221,8 +222,8 @@ app.get('/api/users/:username', async (req, res) => {
       email: userData.email,
       username,
       bio: userData.bio || '',
-      completed_lessons: completedLessons,
-      lessons: userLessons,
+      lessons: lessons, // Include lessons with progress and status
+      completed_lessons: lessons.filter(lesson => lesson.status === 'completed'),
       quiz_scores: scoresSnapshot.val() || {}
     };
 
@@ -437,30 +438,6 @@ app.get('/api/questions', async (req, res) => {
   }
 });
 
-// API: PUT Points All Questions
-app.patch('/api/questions', async (req, res) => {
-    const { points } = req.body;
-
-    if (points === undefined || isNaN(points)) {
-        return res.status(400).json({ error: 'Points is required and must be a number' });
-    }
-
-    try {
-        const snapshot = await db.ref('questions').once('value');
-        const updates = {};
-
-        snapshot.forEach(childSnapshot => {
-            const questionId = childSnapshot.key;
-            updates[`${questionId}/points`] = Number(points);
-        });
-
-        await db.ref('questions').update(updates);
-        res.json({ message: 'All questions updated successfully' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update all points', details: error.message });
-    }
-});
-
 // API: Delete User
 app.delete('/api/users/:username', async (req, res) => {
   try {
@@ -522,6 +499,56 @@ app.put('/api/users/:username', async (req, res) => {
   } catch (error) {
     console.error('Update user error:', error);
     res.status(500).json({ error: 'Failed to update user', details: error.message });
+  }
+});
+
+// API: Delete Material
+app.delete('/api/materials/:materialId', async (req, res) => {
+  try {
+    const { materialId } = req.params;
+
+    const materialRef = db.ref(`materials/${materialId}`);
+    const materialSnapshot = await materialRef.once('value');
+    if (!materialSnapshot.exists()) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    await materialRef.remove();
+    res.status(200).json({ message: 'Material deleted successfully' });
+  } catch (error) {
+    console.error('Delete material error:', error);
+    res.status(500).json({ error: 'Failed to delete material', details: error.message });
+  }
+});
+
+// API: Update Material
+app.put('/api/materials/:materialId', async (req, res) => {
+  try {
+    const { materialId } = req.params;
+    const { lesson_id, chapter_title, explanation, formulas, examples } = req.body;
+
+    if (!lesson_id && !chapter_title && !explanation && !formulas && !examples) {
+      return res.status(400).json({ error: 'At least one field (lesson_id, chapter_title, explanation, formulas, examples) is required for update' });
+    }
+
+    const materialRef = db.ref(`materials/${materialId}`);
+    const materialSnapshot = await materialRef.once('value');
+    if (!materialSnapshot.exists()) {
+      return res.status(404).json({ error: 'Material not found' });
+    }
+
+    const updateData = {};
+    if (lesson_id !== undefined) updateData.lesson_id = lesson_id;
+    if (chapter_title !== undefined) updateData.chapter_title = chapter_title;
+    if (explanation !== undefined) updateData.explanation = explanation;
+    if (formulas !== undefined) updateData.formulas = formulas;
+    if (examples !== undefined) updateData.examples = examples;
+
+    await materialRef.update(updateData);
+    res.status(200).json({ message: 'Material updated successfully' });
+  } catch (error) {
+    console.error('Update material error:', error);
+    res.status(500).json({ error: 'Failed to update material', details: error.message });
   }
 });
 
