@@ -185,7 +185,6 @@ app.put('/api/change-password-by-email', async (req, res) => {
 });
 
 // API: Ambil Data User
-// API: Ambil Data User
 app.get('/api/users/:username', async (req, res) => {
   try {
     const username = req.params.username;
@@ -207,13 +206,13 @@ app.get('/api/users/:username', async (req, res) => {
     const userLessons = lessonsSnapshot.val() || {};
     const allLessons = allLessonsSnapshot.val() || {};
 
-    // Map lessons progress with titles
-    const lessons = Object.entries(userLessons).map(([lessonId, lesson]) => ({
-      lesson_id: lessonId,
-      title: allLessons[lessonId]?.title || lessonId,
-      progress: lesson.progress || 0,
-      status: lesson.status || 'not_started'
-    }));
+    // Get completed lessons
+    const completedLessons = Object.entries(userLessons)
+      .filter(([_, lesson]) => lesson.status === 'completed')
+      .map(([lessonId, _]) => ({
+        lesson_id: lessonId,
+        title: allLessons[lessonId]?.title || lessonId
+      }));
 
     // Prepare profile response
     const profile = {
@@ -222,8 +221,8 @@ app.get('/api/users/:username', async (req, res) => {
       email: userData.email,
       username,
       bio: userData.bio || '',
-      lessons: lessons, // Include lessons with progress and status
-      completed_lessons: lessons.filter(lesson => lesson.status === 'completed'),
+      completed_lessons: completedLessons,
+      lessons: userLessons,
       quiz_scores: scoresSnapshot.val() || {}
     };
 
