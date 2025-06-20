@@ -1,24 +1,24 @@
-const express = require('express');
-const admin = require('firebase-admin');
-const bcrypt = require('bcrypt');
+const express = require("express");
+const admin = require("firebase-admin");
+const bcrypt = require("bcrypt");
 const app = express();
 
 // Ambil Firebase config dari environment variable
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: serviceAccount.databaseURL
+  databaseURL: serviceAccount.databaseURL,
 });
 
 const db = admin.database();
-console.log('Database initialized:', db);
+console.log("Database initialized:", db);
 
 // Middleware untuk parsing JSON
 app.use(express.json());
 
 // Helper untuk menghasilkan ID user auto-increment
 const getNextUserId = async () => {
-  const counterRef = db.ref('counters/user_id');
+  const counterRef = db.ref("counters/user_id");
   try {
     let newId;
     await counterRef.transaction((currentId) => {
@@ -27,23 +27,23 @@ const getNextUserId = async () => {
     });
     return newId;
   } catch (error) {
-    console.error('Error in getNextUserId:', error);
-    throw new Error('Failed to generate user ID');
+    console.error("Error in getNextUserId:", error);
+    throw new Error("Failed to generate user ID");
   }
 };
 
 // API: Register User
-app.post('/api/register', async (req, res) => {
+app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Missing required fields: name, email, password' });
+      return res.status(400).json({ error: "Missing required fields: name, email, password" });
     }
 
     // Cek apakah email sudah terdaftar
-    const usersSnapshot = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+    const usersSnapshot = await db.ref("users").orderByChild("email").equalTo(email).once("value");
     if (usersSnapshot.exists()) {
-      return res.status(400).json({ error: 'Email already exists' });
+      return res.status(400).json({ error: "Email already exists" });
     }
 
     // Generate ID user auto-increment
@@ -59,29 +59,29 @@ app.post('/api/register', async (req, res) => {
       password: hashedPassword,
       created_at: new Date().toISOString(),
       last_login: null,
-      bio: '' // Initialize empty bio
+      bio: "", // Initialize empty bio
     };
 
     await userRef.set(userData);
-    res.status(201).json({ message: 'User registered successfully', user: { user_id: userId, name, email, username } });
+    res.status(201).json({ message: "User registered successfully", user: { user_id: userId, name, email, username } });
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ error: 'Failed to register user', details: error.message });
+    console.error("Register error:", error);
+    res.status(500).json({ error: "Failed to register user", details: error.message });
   }
 });
 
 // API: Login User
-app.post('/api/login', async (req, res) => {
+app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: 'Missing required fields: email, password' });
+      return res.status(400).json({ error: "Missing required fields: email, password" });
     }
 
     // Cari pengguna berdasarkan email
-    const usersSnapshot = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+    const usersSnapshot = await db.ref("users").orderByChild("email").equalTo(email).once("value");
     if (!usersSnapshot.exists()) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // Ambil data pengguna pertama yang cocok
@@ -94,75 +94,75 @@ app.post('/api/login', async (req, res) => {
     // Verifikasi password
     const isPasswordValid = await bcrypt.compare(password, userData.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // Update last_login
     await db.ref(`users/${username}/last_login`).set(new Date().toISOString());
 
     res.status(200).json({
-      message: 'Login successful',
+      message: "Login successful",
       user: {
         user_id: userData.user_id,
         name: userData.name,
         email: userData.email,
         username,
-        bio: userData.bio || ''
-      }
+        bio: userData.bio || "",
+      },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Failed to login', details: error.message });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Failed to login", details: error.message });
   }
 });
 
 // API: Change Password by Username
-app.put('/api/users/:username/password', async (req, res) => {
+app.put("/api/users/:username/password", async (req, res) => {
   try {
     const { username } = req.params;
     const { old_password, new_password } = req.body;
     if (!old_password || !new_password) {
-      return res.status(400).json({ error: 'Missing required fields: old_password, new_password' });
+      return res.status(400).json({ error: "Missing required fields: old_password, new_password" });
     }
 
     const userRef = db.ref(`users/${username}`);
-    const userSnapshot = await userRef.once('value');
+    const userSnapshot = await userRef.once("value");
     if (!userSnapshot.exists()) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     const userData = userSnapshot.val();
     // Verifikasi kata sandi lama
     const isPasswordValid = await bcrypt.compare(old_password, userData.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid old password' });
+      return res.status(401).json({ error: "Invalid old password" });
     }
 
     // Hash kata sandi baru
     const hashedNewPassword = await bcrypt.hash(new_password, 10);
     await userRef.update({ password: hashedNewPassword });
 
-    res.status(200).json({ message: 'Password updated successfully' });
+    res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
-    console.error('Change password error:', error);
-    res.status(500).json({ error: 'Failed to update password', details: error.message });
+    console.error("Change password error:", error);
+    res.status(500).json({ error: "Failed to update password", details: error.message });
   }
 });
 
 // API: Change Password by Email
-app.put('/api/change-password-by-email', async (req, res) => {
+app.put("/api/change-password-by-email", async (req, res) => {
   try {
     const { email, new_password } = req.body;
 
     // Validate input
     if (!email || !new_password) {
-      return res.status(400).json({ error: 'Missing required fields: email, new_password' });
+      return res.status(400).json({ error: "Missing required fields: email, new_password" });
     }
 
     // Find user by email
-    const usersSnapshot = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+    const usersSnapshot = await db.ref("users").orderByChild("email").equalTo(email).once("value");
     if (!usersSnapshot.exists()) {
-      return res.status(404).json({ error: 'Email not found' });
+      return res.status(404).json({ error: "Email not found" });
     }
 
     // Get the first matching user (email is unique, so there should be only one)
@@ -177,30 +177,30 @@ app.put('/api/change-password-by-email', async (req, res) => {
     // Update password in the database
     await db.ref(`users/${username}`).update({ password: hashedNewPassword });
 
-    res.status(200).json({ message: 'Password updated successfully' });
+    res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
-    console.error('Change password by email error:', error);
-    res.status(500).json({ error: 'Failed to update password', details: error.message });
+    console.error("Change password by email error:", error);
+    res.status(500).json({ error: "Failed to update password", details: error.message });
   }
 });
 
 // API: Ambil Data User
-app.get('/api/users/:username', async (req, res) => {
+app.get("/api/users/:username", async (req, res) => {
   try {
     const username = req.params.username;
 
     // Ambil data pengguna
-    const userSnapshot = await db.ref(`users/${username}`).once('value');
+    const userSnapshot = await db.ref(`users/${username}`).once("value");
     if (!userSnapshot.exists()) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Ambil data lessons pengguna
-    const lessonsSnapshot = await db.ref(`user_lessons/${username}`).once('value');
-    const scoresSnapshot = await db.ref('quiz_scores').orderByChild('user_id').equalTo(username).once('value');
+    const lessonsSnapshot = await db.ref(`user_lessons/${username}`).once("value");
+    const scoresSnapshot = await db.ref("quiz_scores").orderByChild("user_id").equalTo(username).once("value");
 
     // Ambil semua data lessons untuk mendapatkan title
-    const allLessonsSnapshot = await db.ref('lessons').once('value');
+    const allLessonsSnapshot = await db.ref("lessons").once("value");
 
     const userData = userSnapshot.val();
     const userLessons = lessonsSnapshot.val() || {};
@@ -208,10 +208,10 @@ app.get('/api/users/:username', async (req, res) => {
 
     // Get completed lessons
     const completedLessons = Object.entries(userLessons)
-      .filter(([_, lesson]) => lesson.status === 'completed')
+      .filter(([_, lesson]) => lesson.status === "completed")
       .map(([lessonId, _]) => ({
         lesson_id: lessonId,
-        title: allLessons[lessonId]?.title || lessonId
+        title: allLessons[lessonId]?.title || lessonId,
       }));
 
     // Prepare profile response
@@ -220,74 +220,74 @@ app.get('/api/users/:username', async (req, res) => {
       name: userData.name,
       email: userData.email,
       username,
-      bio: userData.bio || '',
+      bio: userData.bio || "",
       completed_lessons: completedLessons,
       lessons: userLessons,
-      quiz_scores: scoresSnapshot.val() || {}
+      quiz_scores: scoresSnapshot.val() || {},
     };
 
     res.status(200).json(profile);
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Failed to fetch user', details: error.message });
+    console.error("Get user error:", error);
+    res.status(500).json({ error: "Failed to fetch user", details: error.message });
   }
 });
 
 // API: Update Progress Kelas User
-app.put('/api/users/:username/lessons/:lessonId', async (req, res) => {
+app.put("/api/users/:username/lessons/:lessonId", async (req, res) => {
   try {
     const { username, lessonId } = req.params;
     const { progress, status } = req.body;
 
     if (progress < 0 || progress > 100) {
-      return res.status(400).json({ error: 'Progress must be between 0 and 100' });
+      return res.status(400).json({ error: "Progress must be between 0 and 100" });
     }
-    if (!['not_started', 'in_progress', 'completed'].includes(status)) {
-      return res.status(400).json({ error: 'Invalid status' });
+    if (!["not_started", "in_progress", "completed"].includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
     }
 
     const lessonRef = db.ref(`user_lessons/${username}/${lessonId}`);
     await lessonRef.set({ progress, status });
-    res.status(200).json({ message: 'Lesson progress updated successfully' });
+    res.status(200).json({ message: "Lesson progress updated successfully" });
   } catch (error) {
-    console.error('Update lesson progress error:', error);
-    res.status(500).json({ error: 'Failed to update progress', details: error.message });
+    console.error("Update lesson progress error:", error);
+    res.status(500).json({ error: "Failed to update progress", details: error.message });
   }
 });
 
 // API: Tambah Skor Kuis
-app.post('/api/quiz_scores', async (req, res) => {
+app.post("/api/quiz_scores", async (req, res) => {
   try {
     const { user_id, quiz_id, score, date_taken } = req.body;
 
     if (!user_id || !quiz_id || score === undefined || !date_taken) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const scoreRef = db.ref('quiz_scores').push();
+    const scoreRef = db.ref("quiz_scores").push();
     const scoreData = {
       score_id: scoreRef.key,
       user_id,
       quiz_id,
       score,
-      date_taken: date_taken || new Date().toISOString()
+      date_taken: date_taken || new Date().toISOString(),
     };
 
     await scoreRef.set(scoreData);
-    res.status(201).json({ message: 'Quiz score added successfully', score: scoreData });
+    res.status(201).json({ message: "Quiz score added successfully", score: scoreData });
   } catch (error) {
-    console.error('Add quiz score error:', error);
-    res.status(500).json({ error: 'Failed to add quiz score', details: error.message });
+    console.error("Add quiz score error:", error);
+    res.status(500).json({ error: "Failed to add quiz score", details: error.message });
   }
 });
 
 // API: Ambil Semua Kelas
-app.get('/api/lessons', async (req, res) => {
+app.get("/api/lessons", async (req, res) => {
   try {
-    const lessonsSnapshot = await db.ref('lessons').once('value');
-    const materialsSnapshot = await db.ref('materials').once('value');
-    const quizzesSnapshot = await db.ref('quizzes').once('value');
-    const questionsSnapshot = await db.ref('questions').once('value');
+    const lessonsSnapshot = await db.ref("lessons").once("value");
+    const materialsSnapshot = await db.ref("materials").once("value");
+    const quizzesSnapshot = await db.ref("quizzes").once("value");
+    const questionsSnapshot = await db.ref("questions").once("value");
 
     const lessons = lessonsSnapshot.val() || {};
     const materials = materialsSnapshot.val() || {};
@@ -295,23 +295,23 @@ app.get('/api/lessons', async (req, res) => {
     const questions = questionsSnapshot.val() || {};
 
     // Gabungkan data
-    Object.keys(lessons).forEach(lessonId => {
+    Object.keys(lessons).forEach((lessonId) => {
       lessons[lessonId].materials = {};
       lessons[lessonId].quizzes = {};
 
       // Tambah materials berdasarkan lesson_id
-      Object.keys(materials).forEach(materialId => {
+      Object.keys(materials).forEach((materialId) => {
         if (materials[materialId].lesson_id === lessonId) {
           lessons[lessonId].materials[materialId] = materials[materialId];
         }
       });
 
       // Tambah quizzes berdasarkan lesson_id
-      Object.keys(quizzes).forEach(quizId => {
+      Object.keys(quizzes).forEach((quizId) => {
         if (quizzes[quizId].lesson_id === lessonId) {
           quizzes[quizId].questions = {};
           // Tambah questions berdasarkan quiz_id
-          Object.keys(questions).forEach(questionId => {
+          Object.keys(questions).forEach((questionId) => {
             if (questions[questionId].quiz_id === quizId) {
               quizzes[quizId].questions[questionId] = questions[questionId];
             }
@@ -323,108 +323,108 @@ app.get('/api/lessons', async (req, res) => {
 
     res.status(200).json(lessons);
   } catch (error) {
-    console.error('Get lessons error:', error);
-    res.status(500).json({ error: 'Failed to fetch lessons', details: error.message });
+    console.error("Get lessons error:", error);
+    res.status(500).json({ error: "Failed to fetch lessons", details: error.message });
   }
 });
 
 // API: Tambah Kelas
-app.post('/api/lessons', async (req, res) => {
+app.post("/api/lessons", async (req, res) => {
   try {
     const { lesson_id, title, description } = req.body;
     if (!lesson_id || !title || !description) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     const lessonRef = db.ref(`lessons/${lesson_id}`);
-    const snapshot = await lessonRef.once('value');
+    const snapshot = await lessonRef.once("value");
     if (snapshot.exists()) {
-      return res.status(400).json({ error: 'Lesson already exists' });
+      return res.status(400).json({ error: "Lesson already exists" });
     }
 
     const lessonData = { lesson_id, title, description };
     await lessonRef.set(lessonData);
-    res.status(201).json({ message: 'Lesson created successfully', lesson: lessonData });
+    res.status(201).json({ message: "Lesson created successfully", lesson: lessonData });
   } catch (error) {
-    console.error('Add lesson error:', error);
-    res.status(500).json({ error: 'Failed to create lesson', details: error.message });
+    console.error("Add lesson error:", error);
+    res.status(500).json({ error: "Failed to create lesson", details: error.message });
   }
 });
 
 // API: Tambah Materi ke Kelas
-app.post('/api/materials', async (req, res) => {
+app.post("/api/materials", async (req, res) => {
   try {
     const { lesson_id, chapter_title, explanation, formulas, examples } = req.body;
     if (!lesson_id || !chapter_title || !explanation) {
-      return res.status(400).json({ error: 'Missing required fields: lesson_id, chapter_title, explanation' });
+      return res.status(400).json({ error: "Missing required fields: lesson_id, chapter_title, explanation" });
     }
 
-    const materialRef = db.ref('materials').push();
+    const materialRef = db.ref("materials").push();
     const materialData = {
       material_id: materialRef.key,
       lesson_id,
       chapter_title,
       explanation,
       formulas: formulas || [],
-      examples: examples || []
+      examples: examples || [],
     };
 
     await materialRef.set(materialData);
-    res.status(201).json({ message: 'Material added successfully', material: materialData });
+    res.status(201).json({ message: "Material added successfully", material: materialData });
   } catch (error) {
-    console.error('Add material error:', error);
-    res.status(500).json({ error: 'Failed to add material', details: error.message });
+    console.error("Add material error:", error);
+    res.status(500).json({ error: "Failed to add material", details: error.message });
   }
 });
 
 // API: Tambah Kuis ke Kelas
-app.post('/api/quizzes', async (req, res) => {
+app.post("/api/quizzes", async (req, res) => {
   try {
     const { lesson_id, quiz_id, title, total_points } = req.body;
     if (!lesson_id || !quiz_id || !title || !total_points) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
     const quizRef = db.ref(`quizzes/${quiz_id}`);
     const quizData = { quiz_id, lesson_id, title, total_points };
     await quizRef.set(quizData);
-    res.status(201).json({ message: 'Quiz added successfully', quiz: quizData });
+    res.status(201).json({ message: "Quiz added successfully", quiz: quizData });
   } catch (error) {
-    console.error('Add quiz error:', error);
-    res.status(500).json({ error: 'Failed to add quiz', details: error.message });
+    console.error("Add quiz error:", error);
+    res.status(500).json({ error: "Failed to add quiz", details: error.message });
   }
 });
 
 // API: Tambah Pertanyaan ke Kuis
-app.post('/api/questions', async (req, res) => {
+app.post("/api/questions", async (req, res) => {
   try {
     const { quiz_id, text, options, correct_option, points } = req.body;
     if (!quiz_id || !text || !options || !correct_option || !points) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
 
-    const questionRef = db.ref('questions').push();
+    const questionRef = db.ref("questions").push();
     const questionData = {
       question_id: questionRef.key,
       quiz_id,
       text,
       options,
       correct_option,
-      points
+      points,
     };
 
     await questionRef.set(questionData);
-    res.status(201).json({ message: 'Question added successfully', question: questionData });
+    res.status(201).json({ message: "Question added successfully", question: questionData });
   } catch (error) {
-    console.error('Add question error:', error);
-    res.status(500).json({ error: 'Failed to add question', details: error.message });
+    console.error("Add question error:", error);
+    res.status(500).json({ error: "Failed to add question", details: error.message });
   }
 });
 
 // API: Get All Questions
-app.get('/api/questions', async (req, res) => {
+app.get("/api/questions", async (req, res) => {
   try {
-    const questionsSnapshot = await db.ref('questions').once('value');
+    const questionsSnapshot = await db.ref("questions").once("value");
     const questions = questionsSnapshot.val() || {};
 
     // Ubah objek menjadi array untuk respons yang lebih mudah diproses
@@ -432,52 +432,52 @@ app.get('/api/questions', async (req, res) => {
 
     res.status(200).json({ questions: questionsArray });
   } catch (error) {
-    console.error('Get questions error:', error);
-    res.status(500).json({ error: 'Failed to fetch questions', details: error.message });
+    console.error("Get questions error:", error);
+    res.status(500).json({ error: "Failed to fetch questions", details: error.message });
   }
 });
 
 // API: Delete User
-app.delete('/api/users/:username', async (req, res) => {
+app.delete("/api/users/:username", async (req, res) => {
   try {
     const username = req.params.username;
     const userRef = db.ref(`users/${username}`);
-    const snapshot = await userRef.once('value');
+    const snapshot = await userRef.once("value");
     if (!userSnapshot.exists()) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     await userRef.remove();
     await db.ref(`user_lessons/${username}`).remove();
-    await db.ref('quiz_scores').orderByChild('user_id').equalTo(username).remove();
-    res.status(200).json({ message: 'User deleted successfully' });
+    await db.ref("quiz_scores").orderByChild("user_id").equalTo(username).remove();
+    res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
-    console.error('Delete user error:', error);
-    res.status(500).json({ error: 'Failed to delete user', details: error.message });
+    console.error("Delete user error:", error);
+    res.status(500).json({ error: "Failed to delete user", details: error.message });
   }
 });
 
-app.get('/api/materials', async (req, res) => {
+app.get("/api/materials", async (req, res) => {
   try {
-    const materialsSnapshot = await db.ref('materials').once('value');
+    const materialsSnapshot = await db.ref("materials").once("value");
     const materials = materialsSnapshot.val() || {};
     const materialsArray = Object.values(materials);
     res.status(200).json({ materials: materialsArray });
   } catch (error) {
-    console.error('Get materials error:', error);
-    res.status(500).json({ error: 'Failed to fetch materials', details: error.message });
+    console.error("Get materials error:", error);
+    res.status(500).json({ error: "Failed to fetch materials", details: error.message });
   }
 });
 
-app.put('/api/users/:username', async (req, res) => {
+app.put("/api/users/:username", async (req, res) => {
   try {
     const username = req.params.username;
     const { name, bio } = req.body;
 
     // Periksa apakah pengguna ada
-    const userSnapshot = await db.ref(`users/${username}`).once('value');
+    const userSnapshot = await db.ref(`users/${username}`).once("value");
     if (!userSnapshot.exists()) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Siapkan data untuk update
@@ -494,46 +494,46 @@ app.put('/api/users/:username', async (req, res) => {
       await db.ref(`users/${username}`).update(updateData);
     }
 
-    res.status(200).json({ message: 'User updated successfully' });
+    res.status(200).json({ message: "User updated successfully" });
   } catch (error) {
-    console.error('Update user error:', error);
-    res.status(500).json({ error: 'Failed to update user', details: error.message });
+    console.error("Update user error:", error);
+    res.status(500).json({ error: "Failed to update user", details: error.message });
   }
 });
 
 // API: Delete Material
-app.delete('/api/materials/:materialId', async (req, res) => {
+app.delete("/api/materials/:materialId", async (req, res) => {
   try {
     const { materialId } = req.params;
 
     const materialRef = db.ref(`materials/${materialId}`);
-    const materialSnapshot = await materialRef.once('value');
+    const materialSnapshot = await materialRef.once("value");
     if (!materialSnapshot.exists()) {
-      return res.status(404).json({ error: 'Material not found' });
+      return res.status(404).json({ error: "Material not found" });
     }
 
     await materialRef.remove();
-    res.status(200).json({ message: 'Material deleted successfully' });
+    res.status(200).json({ message: "Material deleted successfully" });
   } catch (error) {
-    console.error('Delete material error:', error);
-    res.status(500).json({ error: 'Failed to delete material', details: error.message });
+    console.error("Delete material error:", error);
+    res.status(500).json({ error: "Failed to delete material", details: error.message });
   }
 });
 
 // API: Update Material
-app.put('/api/materials/:materialId', async (req, res) => {
+app.put("/api/materials/:materialId", async (req, res) => {
   try {
     const { materialId } = req.params;
     const { lesson_id, chapter_title, explanation, formulas, examples } = req.body;
 
     if (!lesson_id && !chapter_title && !explanation && !formulas && !examples) {
-      return res.status(400).json({ error: 'At least one field (lesson_id, chapter_title, explanation, formulas, examples) is required for update' });
+      return res.status(400).json({ error: "At least one field (lesson_id, chapter_title, explanation, formulas, examples) is required for update" });
     }
 
     const materialRef = db.ref(`materials/${materialId}`);
-    const materialSnapshot = await materialRef.once('value');
+    const materialSnapshot = await materialRef.once("value");
     if (!materialSnapshot.exists()) {
-      return res.status(404).json({ error: 'Material not found' });
+      return res.status(404).json({ error: "Material not found" });
     }
 
     const updateData = {};
@@ -544,30 +544,30 @@ app.put('/api/materials/:materialId', async (req, res) => {
     if (examples !== undefined) updateData.examples = examples;
 
     await materialRef.update(updateData);
-    res.status(200).json({ message: 'Material updated successfully' });
+    res.status(200).json({ message: "Material updated successfully" });
   } catch (error) {
-    console.error('Update material error:', error);
-    res.status(500).json({ error: 'Failed to update material', details: error.message });
+    console.error("Update material error:", error);
+    res.status(500).json({ error: "Failed to update material", details: error.message });
   }
 });
 
 // API: Get Lesson Progress for a User
-app.get('/api/users/:username/lessons', async (req, res) => {
+app.get("/api/users/:username/lessons", async (req, res) => {
   try {
     const { username } = req.params;
 
     // Check if user exists
-    const userSnapshot = await db.ref(`users/${username}`).once('value');
+    const userSnapshot = await db.ref(`users/${username}`).once("value");
     if (!userSnapshot.exists()) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Fetch lesson progress
-    const lessonsSnapshot = await db.ref(`user_lessons/${username}`).once('value');
+    const lessonsSnapshot = await db.ref(`user_lessons/${username}`).once("value");
     const userLessons = lessonsSnapshot.val() || {};
 
     // Fetch all lessons to get titles
-    const allLessonsSnapshot = await db.ref('lessons').once('value');
+    const allLessonsSnapshot = await db.ref("lessons").once("value");
     const allLessons = allLessonsSnapshot.val() || {};
 
     // Enrich lesson progress with titles
@@ -575,27 +575,97 @@ app.get('/api/users/:username/lessons', async (req, res) => {
       lesson_id: lessonId,
       title: allLessons[lessonId]?.title || lessonId,
       progress: lessonData.progress || 0,
-      status: lessonData.status || 'not_started'
+      status: lessonData.status || "not_started",
     }));
 
     res.status(200).json({ lesson_progress: lessonProgress });
   } catch (error) {
-    console.error('Get lesson progress error:', error);
-    res.status(500).json({ error: 'Failed to fetch lesson progress', details: error.message });
+    console.error("Get lesson progress error:", error);
+    res.status(500).json({ error: "Failed to fetch lesson progress", details: error.message });
   }
 });
-app.get('/api/users/:username/lessons/:lessonId', async (req, res) => {
+app.get("/api/users/:username/lessons/:lessonId", async (req, res) => {
   try {
     const { username, lessonId } = req.params;
-    const snapshot = await db.ref(`users/${username}/lessons/${lessonId}`).once('value');
-    const lesson = snapshot.val() || { progress: 0, status: 'in_progress', title: lessonId.replace('_', ' ').toUpperCase() };
+    const snapshot = await db.ref(`users/${username}/lessons/${lessonId}`).once("value");
+    const lesson = snapshot.val() || { progress: 0, status: "in_progress", title: lessonId.replace("_", " ").toUpperCase() };
     res.status(200).json({
       progress: lesson.progress || 0,
-      status: lesson.status || 'in_progress'
+      status: lesson.status || "in_progress",
     });
   } catch (error) {
-    console.error('Get lesson progress error:', error);
-    res.status(500).json({ error: 'Failed to fetch lesson progress', details: error.message });
+    console.error("Get lesson progress error:", error);
+    res.status(500).json({ error: "Failed to fetch lesson progress", details: error.message });
+  }
+});
+
+//Notif
+const randomMessages = [
+  { title: "Belajar Hari Ini", body: "Yuk lanjutkan belajar tensis kamu!" },
+  { title: "Tips Belajar", body: "Ulangi pelajaran kemarin agar makin paham!" },
+  { title: "Semangat!", body: "Hari baru, semangat baru! Belajar yuk!" },
+];
+
+app.post("/api/trigger-notif", async (req, res) => {
+  try {
+    const usersSnapshot = await db.ref("users").once("value");
+    const messages = [];
+    const logs = [];
+
+    usersSnapshot.forEach((child) => {
+      const user = child.val();
+      const fcmToken = user.fcm_token;
+      const username = child.key;
+
+      if (fcmToken) {
+        const randomNotif = randomMessages[Math.floor(Math.random() * randomMessages.length)];
+        const message = {
+          token: fcmToken,
+          notification: {
+            title: randomNotif.title,
+            body: randomNotif.body,
+          },
+          android: {
+            priority: "high",
+          },
+        };
+        messages.push(admin.messaging().send(message));
+        logs.push({ username, notif: randomNotif });
+      }
+    });
+
+    await Promise.all(messages);
+    res.status(200).json({
+      message: "Random notifications sent to all users",
+      count: logs.length,
+      logs,
+    });
+  } catch (error) {
+    console.error("Broadcast notification error:", error);
+    res.status(500).json({ error: "Failed to broadcast notification", details: error.message });
+  }
+});
+
+app.put("/api/users/:username/token", async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { fcm_token } = req.body;
+
+    if (!fcm_token) {
+      return res.status(400).json({ error: "Missing fcm_token" });
+    }
+
+    const userRef = db.ref(`users/${username}`);
+    const snapshot = await userRef.once("value");
+    if (!snapshot.exists()) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    await userRef.update({ fcm_token });
+    res.status(200).json({ message: "FCM token updated successfully" });
+  } catch (error) {
+    console.error("Update FCM token error:", error);
+    res.status(500).json({ error: "Failed to update FCM token", details: error.message });
   }
 });
 
