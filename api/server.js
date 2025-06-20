@@ -73,7 +73,8 @@ app.post("/api/register", async (req, res) => {
 // API: Login User
 app.post("/api/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, fcm_token } = req.body; // ✅ Ambil fcm_token dari body
+
     if (!email || !password) {
       return res.status(400).json({ error: "Missing required fields: email, password" });
     }
@@ -97,8 +98,16 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // Update last_login
-    await db.ref(`users/${username}/last_login`).set(new Date().toISOString());
+    const updates = {
+      last_login: new Date().toISOString(),
+    };
+
+    // ✅ Simpan fcm_token jika tersedia
+    if (fcm_token) {
+      updates.fcm_token = fcm_token;
+    }
+
+    await db.ref(`users/${username}`).update(updates);
 
     res.status(200).json({
       message: "Login successful",
@@ -108,6 +117,7 @@ app.post("/api/login", async (req, res) => {
         email: userData.email,
         username,
         bio: userData.bio || "",
+        fcm_token: fcm_token || null, // optional untuk referensi client
       },
     });
   } catch (error) {
