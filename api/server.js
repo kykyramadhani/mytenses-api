@@ -614,14 +614,33 @@ const randomMessages = [
   { title: "Belajar Hari Ini", body: "Yuk lanjutkan belajar tensis kamu!" },
   { title: "Tips Belajar", body: "Ulangi pelajaran kemarin agar makin paham!" },
   { title: "Semangat!", body: "Hari baru, semangat baru! Belajar yuk!" },
+  { title: "Tenses Time!", body: "Sikat lagi pelajaran tenses biar jago!" },
+  { title: "Jangan Kendor!", body: "Kamu udah setengah jalan, lanjutkan!" },
+  { title: "Paham Tenses", body: "Satu tenses dikuasai, tinggal 15 lagi!" },
+  { title: "Gaspol Belajar!", body: "Jangan biarin tenses bikin bingung, ayo selesaikan!" },
+  { title: "Level Up!", body: "Progress kamu ngegas, lanjut ke pelajaran berikutnya!" },
+  { title: "Tantangan Baru", body: "Siap taklukkan tenses berikutnya? Yuk mulai!" },
+  { title: "Jadi Master", body: "Latihan terus, kamu bakal jago tenses!" },
+  { title: "Belajar Keren", body: "Tenses gampang kalo kamu rajin latihan!" },
+  { title: "Keep Going!", body: "Kamu udah bagus banget, lanjutkan progressnya!" },
+  { title: "Hajar Tenses!", body: "Jangan takut sama tenses, kamu bisa!" },
+  { title: "Pelajaran Seru", body: "Ayo cek pelajaran baru, seru banget!" },
+  { title: "Progres Mantap", body: "Wow, kamu udah sejauh ini! Lanjut yok!" },
+  { title: "Tenses Gampang", body: "Latihan sedikit lagi, tenses bakal nempel di kepala!" },
+  { title: "Siap Quiz?", body: "Uji kemampuan tenses kamu sekarang!" },
+  { title: "Belajar Santai", body: "Tenang aja, pelan-pelan pasti paham!" },
+  { title: "Jadi Pro", body: "Satu langkah lagi menuju master tenses!" },
+  { title: "Yuk Latihan!", body: "Keren banget progressnya, lanjut latihan!" }
 ];
 
 app.post("/api/trigger-notif", async (req, res) => {
   try {
-    const usersSnapshot = await db.ref("users").once("value");
-    const messages = [];
+    const usersSnapshot = await admin.database().ref("users").once("value");
     const logs = [];
+    let successCount = 0;
+    let failedCount = 0;
 
+    const promises = [];
     usersSnapshot.forEach((child) => {
       const user = child.val();
       const fcmToken = user.fcm_token;
@@ -639,20 +658,44 @@ app.post("/api/trigger-notif", async (req, res) => {
             priority: "high",
           },
         };
-        messages.push(admin.messaging().send(message));
-        logs.push({ username, notif: randomNotif });
+
+        // Kirim notifikasi secara individu
+        promises.push(
+          admin.messaging().send(message)
+            .then(() => {
+              logs.push({ username, notif: randomNotif, status: 'success' });
+              successCount++;
+            })
+            .catch((error) => {
+              if (error.code === 'messaging/registration-token-not-registered') {
+                console.log(`Token untuk user ${username} invalid, menghapus...`);
+                admin.database().ref(`users/${username}/fcm_token`).remove();
+                logs.push({ username, notif: randomNotif, status: 'failed', error: 'Invalid token, removed' });
+              } else {
+                logs.push({ username, notif: randomNotif, status: 'failed', error: error.message });
+              }
+              failedCount++;
+            })
+        );
+      } else {
+        logs.push({ username, status: 'skipped', error: 'No FCM token' });
+        failedCount++;
       }
     });
 
-    await Promise.all(messages);
+    // Tunggu semua promise selesai, tapi ga gagal kalo ada error
+    await Promise.allSettled(promises);
+
     res.status(200).json({
-      message: "Random notifications sent to all users",
-      count: logs.length,
+      message: "Broadcast notifications processed",
+      successCount,
+      failedCount,
+      total: usersSnapshot.numChildren(),
       logs,
     });
   } catch (error) {
     console.error("Broadcast notification error:", error);
-    res.status(500).json({ error: "Failed to broadcast notification", details: error.message });
+    res.status(500).json({ error: "Failed to process broadcast", details: error.message });
   }
 });
 
