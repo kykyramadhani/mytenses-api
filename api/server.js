@@ -635,10 +635,12 @@ const randomMessages = [
 
 app.post("/api/trigger-notif", async (req, res) => {
   try {
-    const usersSnapshot = await db.ref("users").once("value");
-    const messages = [];
+    const usersSnapshot = await admin.database().ref("users").once("value");
     const logs = [];
+    let successCount = 0;
+    let failedCount = 0;
 
+    const promises = [];
     usersSnapshot.forEach((child) => {
       const user = child.val();
       const fcmToken = user.fcm_token;
@@ -656,20 +658,44 @@ app.post("/api/trigger-notif", async (req, res) => {
             priority: "high",
           },
         };
-        messages.push(admin.messaging().send(message));
-        logs.push({ username, notif: randomNotif });
+
+        // Kirim notifikasi secara individu
+        promises.push(
+          admin.messaging().send(message)
+            .then(() => {
+              logs.push({ username, notif: randomNotif, status: 'success' });
+              successCount++;
+            })
+            .catch((error) => {
+              if (error.code === 'messaging/registration-token-not-registered') {
+                console.log(`Token untuk user ${username} invalid, menghapus...`);
+                admin.database().ref(`users/${username}/fcm_token`).remove();
+                logs.push({ username, notif: randomNotif, status: 'failed', error: 'Invalid token, removed' });
+              } else {
+                logs.push({ username, notif: randomNotif, status: 'failed', error: error.message });
+              }
+              failedCount++;
+            })
+        );
+      } else {
+        logs.push({ username, status: 'skipped', error: 'No FCM token' });
+        failedCount++;
       }
     });
 
-    await Promise.all(messages);
+    // Tunggu semua promise selesai, tapi ga gagal kalo ada error
+    await Promise.allSettled(promises);
+
     res.status(200).json({
-      message: "Random notifications sent to all users",
-      count: logs.length,
+      message: "Broadcast notifications processed",
+      successCount,
+      failedCount,
+      total: usersSnapshot.numChildren(),
       logs,
     });
   } catch (error) {
     console.error("Broadcast notification error:", error);
-    res.status(500).json({ error: "Failed to broadcast notification", details: error.message });
+    res.status(500).json({ error: "Failed to process broadcast", details: error.message });
   }
 });
 
