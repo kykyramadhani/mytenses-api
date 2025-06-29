@@ -3,7 +3,6 @@ const admin = require("firebase-admin");
 const bcrypt = require("bcrypt");
 const app = express();
 
-// Ambil Firebase config dari environment variable
 const serviceAccount = JSON.parse(process.env.FIREBASE_CONFIG);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -13,10 +12,8 @@ admin.initializeApp({
 const db = admin.database();
 console.log("Database initialized:", db);
 
-// Middleware untuk parsing JSON
 app.use(express.json());
 
-// Helper untuk menghasilkan ID user auto-increment
 const getNextUserId = async () => {
   const counterRef = db.ref("counters/user_id");
   try {
@@ -46,7 +43,6 @@ app.post("/api/register", async (req, res) => {
       return res.status(400).json({ error: "Email already exists" });
     }
 
-    // Generate ID user auto-increment
     const userId = await getNextUserId();
     const username = `user_${userId}`;
 
@@ -59,7 +55,7 @@ app.post("/api/register", async (req, res) => {
       password: hashedPassword,
       created_at: new Date().toISOString(),
       last_login: null,
-      bio: "", // Initialize empty bio
+      bio: "", 
     };
 
     await userRef.set(userData);
@@ -102,7 +98,6 @@ app.post("/api/login", async (req, res) => {
       last_login: new Date().toISOString(),
     };
 
-    // ✅ Simpan fcm_token jika tersedia
     if (fcm_token) {
       updates.fcm_token = fcm_token;
     }
@@ -117,7 +112,7 @@ app.post("/api/login", async (req, res) => {
         email: userData.email,
         username,
         bio: userData.bio || "",
-        fcm_token: fcm_token || null, // optional untuk referensi client
+        fcm_token: fcm_token || null, 
       },
     });
   } catch (error) {
@@ -175,7 +170,6 @@ app.put("/api/change-password-by-email", async (req, res) => {
       return res.status(404).json({ error: "Email not found" });
     }
 
-    // Get the first matching user (email is unique, so there should be only one)
     let username;
     usersSnapshot.forEach((childSnapshot) => {
       username = childSnapshot.key;
@@ -184,7 +178,6 @@ app.put("/api/change-password-by-email", async (req, res) => {
     // Hash new password
     const hashedNewPassword = await bcrypt.hash(new_password, 10);
 
-    // Update password in the database
     await db.ref(`users/${username}`).update({ password: hashedNewPassword });
 
     res.status(200).json({ message: "Password updated successfully" });
@@ -224,7 +217,6 @@ app.get("/api/users/:username", async (req, res) => {
         title: allLessons[lessonId]?.title || lessonId,
       }));
 
-    // Prepare profile response
     const profile = {
       user_id: userData.user_id,
       name: userData.name,
@@ -561,7 +553,7 @@ app.put("/api/materials/:materialId", async (req, res) => {
   }
 });
 
-// API: Get Lesson Progress for a User
+// API: Get Lesson Progress 
 app.get("/api/users/:username/lessons", async (req, res) => {
   try {
     const { username } = req.params;
@@ -572,15 +564,12 @@ app.get("/api/users/:username/lessons", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Fetch lesson progress
     const lessonsSnapshot = await db.ref(`user_lessons/${username}`).once("value");
     const userLessons = lessonsSnapshot.val() || {};
 
-    // Fetch all lessons to get titles
     const allLessonsSnapshot = await db.ref("lessons").once("value");
     const allLessons = allLessonsSnapshot.val() || {};
 
-    // Enrich lesson progress with titles
     const lessonProgress = Object.entries(userLessons).map(([lessonId, lessonData]) => ({
       lesson_id: lessonId,
       title: allLessons[lessonId]?.title || lessonId,
@@ -659,7 +648,6 @@ app.post("/api/trigger-notif", async (req, res) => {
           },
         };
 
-        // Kirim notifikasi secara individu
         promises.push(
           admin.messaging().send(message)
             .then(() => {
