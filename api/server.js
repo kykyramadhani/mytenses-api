@@ -695,7 +695,7 @@ app.put("/api/users/:username/token", async (req, res) => {
     if (!fcm_token) {
       return res.status(400).json({ error: "Missing fcm_token" });
     }
-
+    
     const userRef = db.ref(`users/${username}`);
     const snapshot = await userRef.once("value");
     if (!snapshot.exists()) {
