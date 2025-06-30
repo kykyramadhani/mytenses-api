@@ -1,8 +1,8 @@
 const admin = require("firebase-admin");
-const db = admin.database();
 
 const userLessonModel = {
   async getAllLessonProgress(username) {
+    const db = admin.database();
     const userSnapshot = await db.ref(`users/${username}`).once("value");
     if (!userSnapshot.exists()) {
       throw new Error("User not found");
@@ -25,6 +25,7 @@ const userLessonModel = {
   },
 
   async getLessonProgress(username, lessonId) {
+    const db = admin.database();
     const snapshot = await db.ref(`user_lessons/${username}/${lessonId}`).once("value");
     const lesson = snapshot.val() || { progress: 0, status: "in_progress" };
     return {
@@ -34,6 +35,7 @@ const userLessonModel = {
   },
 
   async updateLessonProgress(username, lessonId, { progress, status }) {
+    const db = admin.database();
     if (progress < 0 || progress > 100) {
       throw new Error("Progress must be between 0 and 100");
     }

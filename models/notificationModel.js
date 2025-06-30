@@ -1,5 +1,4 @@
 const admin = require("firebase-admin");
-const db = admin.database();
 
 const randomMessages = [
   { title: "Belajar Hari Ini", body: "Yuk lanjutkan belajar tensis kamu!" },
@@ -26,6 +25,7 @@ const randomMessages = [
 
 const notificationModel = {
   async triggerNotification() {
+    const db = admin.database();
     const usersSnapshot = await db.ref("users").once("value");
     const logs = [];
     let successCount = 0;

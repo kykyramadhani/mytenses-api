@@ -1,16 +1,16 @@
 const admin = require("firebase-admin");
 const bcrypt = require("bcrypt");
-const counterModel = require("./counterModel"); 
-const db = admin.database();
+const counterModel = require("./counterModel");
 
 const userModel = {
   async register({ name, email, password }) {
+    const db = admin.database();
     const usersSnapshot = await db.ref("users").orderByChild("email").equalTo(email).once("value");
     if (usersSnapshot.exists()) {
       throw new Error("Email already exists");
     }
 
-    const userId = await counterModel.getNextUserId(); 
+    const userId = await counterModel.getNextUserId();
     const username = `user_${userId}`;
     const hashedPassword = await bcrypt.hash(password, 10);
     const userData = {
@@ -28,6 +28,7 @@ const userModel = {
   },
 
   async login({ email, password, fcm_token }) {
+    const db = admin.database();
     const usersSnapshot = await db.ref("users").orderByChild("email").equalTo(email).once("value");
     if (!usersSnapshot.exists()) {
       throw new Error("Invalid email or password");
@@ -63,6 +64,7 @@ const userModel = {
   },
 
   async changePasswordByUsername(username, old_password, new_password) {
+    const db = admin.database();
     const userRef = db.ref(`users/${username}`);
     const userSnapshot = await userRef.once("value");
     if (!userSnapshot.exists()) {
@@ -80,6 +82,7 @@ const userModel = {
   },
 
   async changePasswordByEmail(email, new_password) {
+    const db = admin.database();
     const usersSnapshot = await db.ref("users").orderByChild("email").equalTo(email).once("value");
     if (!usersSnapshot.exists()) {
       throw new Error("Email not found");
@@ -95,6 +98,7 @@ const userModel = {
   },
 
   async getUser(username) {
+    const db = admin.database();
     const userSnapshot = await db.ref(`users/${username}`).once("value");
     if (!userSnapshot.exists()) {
       throw new Error("User not found");
@@ -128,6 +132,7 @@ const userModel = {
   },
 
   async deleteUser(username) {
+    const db = admin.database();
     const userRef = db.ref(`users/${username}`);
     const snapshot = await userRef.once("value");
     if (!snapshot.exists()) {
@@ -140,6 +145,7 @@ const userModel = {
   },
 
   async updateUser(username, { name, bio }) {
+    const db = admin.database();
     const userRef = db.ref(`users/${username}`);
     const userSnapshot = await userRef.once("value");
     if (!userSnapshot.exists()) {
@@ -156,6 +162,7 @@ const userModel = {
   },
 
   async updateFcmToken(username, fcm_token) {
+    const db = admin.database();
     const userRef = db.ref(`users/${username}`);
     const snapshot = await userRef.once("value");
     if (!snapshot.exists()) {

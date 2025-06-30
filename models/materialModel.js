@@ -1,14 +1,15 @@
 const admin = require("firebase-admin");
-const db = admin.database();
 
 const materialModel = {
   async getAllMaterials() {
+    const db = admin.database();
     const materialsSnapshot = await db.ref("materials").once("value");
     const materials = materialsSnapshot.val() || {};
     return Object.values(materials);
   },
 
   async addMaterial({ lesson_id, chapter_title, explanation, formulas, examples }) {
+    const db = admin.database();
     const materialRef = db.ref("materials").push();
     const materialData = {
       material_id: materialRef.key,
@@ -24,6 +25,7 @@ const materialModel = {
   },
 
   async deleteMaterial(materialId) {
+    const db = admin.database();
     const materialRef = db.ref(`materials/${materialId}`);
     const materialSnapshot = await materialRef.once("value");
     if (!materialSnapshot.exists()) {
@@ -34,6 +36,7 @@ const materialModel = {
   },
 
   async updateMaterial(materialId, { lesson_id, chapter_title, explanation, formulas, examples }) {
+    const db = admin.database();
     const materialRef = db.ref(`materials/${materialId}`);
     const materialSnapshot = await materialRef.once("value");
     if (!materialSnapshot.exists()) {

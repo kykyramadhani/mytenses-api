@@ -1,8 +1,8 @@
 const admin = require("firebase-admin");
-const db = admin.database();
 
 const counterModel = {
   async getNextUserId() {
+    const db = admin.database();
     const counterRef = db.ref("counters/user_id");
     try {
       let newId;

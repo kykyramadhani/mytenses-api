@@ -1,8 +1,8 @@
 const admin = require("firebase-admin");
-const db = admin.database();
 
 const lessonModel = {
   async getAllLessons() {
+    const db = admin.database();
     const lessonsSnapshot = await db.ref("lessons").once("value");
     const materialsSnapshot = await db.ref("materials").once("value");
     const quizzesSnapshot = await db.ref("quizzes").once("value");
@@ -40,6 +40,7 @@ const lessonModel = {
   },
 
   async addLesson({ lesson_id, title, description }) {
+    const db = admin.database();
     const lessonRef = db.ref(`lessons/${lesson_id}`);
     const snapshot = await lessonRef.once("value");
     if (snapshot.exists()) {
